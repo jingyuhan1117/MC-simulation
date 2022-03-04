@@ -1,0 +1,574 @@
+
+#include "pch.h"
+#include <iostream>
+#include <cmath>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <fstream>
+#include <string>
+#include <ctime>
+using namespace std;
+
+
+void crossProduct(double vect_A[], double vect_B[], double cross_P[])
+
+{
+
+	cross_P[0] = vect_A[1] * vect_B[2] - vect_A[2] * vect_B[1];
+	cross_P[1] = vect_A[0] * vect_B[2] - vect_A[2] * vect_B[0];
+	cross_P[2] = vect_A[0] * vect_B[1] - vect_A[1] * vect_B[0];
+}
+void NormalCylinder(double vect_A[], double vect_B[], double vect_C[], double normal_p[])
+
+{
+
+	double n = ((vect_C[0] - vect_A[0]) * (vect_B[0] - vect_A[0]) + (vect_C[1] - vect_A[1]) * (vect_B[1] - vect_A[1]) + (vect_C[2] - vect_A[2]) * (vect_B[2] - vect_A[2])) / ((vect_B[0] - vect_A[0]) *(vect_B[0] - vect_A[0]) + (vect_B[1] - vect_A[1]) *(vect_B[1] - vect_A[1]) + (vect_B[2] - vect_A[2])*(vect_B[2] - vect_A[2]));
+	double pp = sqrt((vect_C[0] - (n * (vect_B[0] - vect_A[0]) + vect_A[0]))*(vect_C[0] - (n * (vect_B[0] - vect_A[0]) + vect_A[0])) + (vect_C[1] - (n * (vect_B[1] - vect_A[1]) + vect_A[1]))*(vect_C[1] - (n * (vect_B[1] - vect_A[1]) + vect_A[1])) + (vect_C[2] - (n * (vect_B[2] - vect_A[2]) + vect_A[2])) *(vect_C[2] - (n * (vect_B[2] - vect_A[2]) + vect_A[2])));
+	normal_p[0] = (vect_C[0] - (n * (vect_B[0] - vect_A[0]) + vect_A[0])) / pp;
+	normal_p[1] = (vect_C[1] - (n * (vect_B[1] - vect_A[1]) + vect_A[1])) / pp;
+	normal_p[2] = (vect_C[2] - (n * (vect_B[2] - vect_A[2]) + vect_A[2])) / pp;
+}
+void ElaslicityTranslate(double normal_vector[], double translate_p[3][3])
+
+{
+
+	translate_p[0][0] = 1 - 2 * normal_vector[0] * normal_vector[0]; translate_p[0][1] = -2 * normal_vector[0] * normal_vector[1]; translate_p[0][2] = -2 * normal_vector[0] * normal_vector[2];
+	translate_p[1][0] = -2 * normal_vector[0] * normal_vector[1]; translate_p[1][1] = 1 - 2 * normal_vector[1] * normal_vector[1]; translate_p[1][2] = -2 * normal_vector[1] * normal_vector[2];
+	translate_p[2][0] = -2 * normal_vector[0] * normal_vector[2]; translate_p[2][1] = -2 * normal_vector[1] * normal_vector[2]; translate_p[2][2] = 1 - 2 * normal_vector[2] * normal_vector[2];
+}
+void PlaneLineIntersectPoint(double planeVector[], double planePoint[], double lineVector[], double linePoint[], double pt[], double returnResult[])
+{
+
+	double vp1, vp2, vp3, n1, n2, n3, v1, v2, v3, m1, m2, m3, t;
+	vp1 = planeVector[0];
+	vp2 = planeVector[1];
+	vp3 = planeVector[2];
+	n1 = planePoint[0];
+	n2 = planePoint[1];
+	n3 = planePoint[2];
+	v1 = lineVector[0];
+	v2 = lineVector[1];
+	v3 = lineVector[2];
+	m1 = linePoint[0];
+	m2 = linePoint[1];
+	m3 = linePoint[2];
+	pt[0] = v1 * vp1 + v2 * vp2 + v3 * vp3;
+
+	if (pt[0] != 0)
+	{
+		t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / pt[0];
+		returnResult[0] = m1 + v1 * t;
+		returnResult[1] = m2 + v2 * t;
+		returnResult[2] = m3 + v3 * t;
+	}
+}
+
+void CylinderLineIntersectPoint(double LinePoint[], double NormalCylinder[], double CylinderRadius, double returnResult[])//Line should through CylinderCenter
+{
+
+	double   m1, m2, m3, v1, v2, v3, t;
+
+
+	m1 = LinePoint[0];
+	m2 = LinePoint[1];
+	m3 = LinePoint[2];
+
+	v1 = NormalCylinder[0];
+	v2 = NormalCylinder[1];
+	v3 = NormalCylinder[2];
+	t = -CylinderRadius / sqrt(v1*v1 + v2 * v2 + v3 * v3);
+	returnResult[0] = m1 + v1 * t;
+	returnResult[1] = m2 + v2 * t;
+	returnResult[2] = m3 + v3 * t;
+
+}
+void CylinderLineIntersectPoint1(double LinePoint[], double NormalCylinder[], double CylinderRadius, double d, double returnResult[])//Line should through CylinderCenter
+{
+
+	double   m1, m2, m3, v1, v2, v3, t;
+
+
+	m1 = LinePoint[0];
+	m2 = LinePoint[1];
+	m3 = LinePoint[2];
+
+	v1 = NormalCylinder[0];
+	v2 = NormalCylinder[1];
+	v3 = NormalCylinder[2];
+	t = d - CylinderRadius;
+	returnResult[0] = m1 - v1 * t;
+	returnResult[1] = m2 - v2 * t;
+	returnResult[2] = m3 - v3 * t;
+
+}
+
+void DiffusionOutMyocyte(int n_myocyte, double start_point_all[7000][3], double end_point_all[7000][3], double rr[7000], double length_step1, double length_step2, int n_step, double step_start[3], double step_end[3], double permeability_probability_in, double permeability_probability_out);
+void DiffusionInMyocyte(int n_myocyte, double start_point_all[7000][3], double end_point_all[7000][3], double start_point[3], double end_point[3], double rr[7000], double r, double length_step1, double length_step2, int n_step, double step_start[3], double step_end[3], double permeability_probability_in, double permeability_probability_out);
+
+void DiffusionInMyocyte(int n_myocyte, double start_point_all[7000][3], double end_point_all[7000][3], double start_point[3], double end_point[3], double rr[7000], double r, double length_step1, double length_step2, int n_step, double step_start[3], double step_end[3], double permeability_probability_in, double permeability_probability_out)
+{
+	double step_location1[3];
+	step_location1[0] = step_start[0]; step_location1[1] = step_start[1]; step_location1[2] = step_start[2];
+	int j = 0;
+	while (j < n_step)
+	{
+
+		double x1 = rand() / double(RAND_MAX + 1) * 2 - 1;
+		double x2 = rand() / double(RAND_MAX + 1) * 2 - 1;
+		if (x1*x1 + x2 * x2 >= 1)
+		{
+			continue;
+		}
+
+		double xx = 2 * x1*sqrt(1 - x1 * x1 - x2 * x2);
+		double yy = 2 * x2*sqrt(1 - x1 * x1 - x2 * x2);
+		double zz = 1 - 2 * (x1 * x1 + x2 * x2);
+		double diffusion_dir[] = { xx,yy,zz };
+
+
+		double step_location2[] = { step_location1[0] + diffusion_dir[0] * length_step1,step_location1[1] + diffusion_dir[1] * length_step1,step_location1[2] + diffusion_dir[2] * length_step1 };
+		double start_end[3];
+		start_end[0] = end_point[0] - start_point[0]; start_end[1] = end_point[1] - start_point[1]; start_end[2] = end_point[2] - start_point[2];
+		double cylinder_dir[3];
+		cylinder_dir[0] = start_end[0] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+		cylinder_dir[1] = start_end[1] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+		cylinder_dir[2] = start_end[2] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+		double vert_c[] = { step_location2[0] - start_point[0],step_location2[1] - start_point[1], step_location2[2] - start_point[2] };
+		double cross_pp[3];
+		crossProduct(vert_c, cylinder_dir, cross_pp);
+		double dd = sqrt(cross_pp[0] * cross_pp[0] + cross_pp[1] * cross_pp[1] + cross_pp[2] * cross_pp[2]);
+
+		if (dd <= r)
+		{
+			step_location1[0] = step_location2[0]; step_location1[1] = step_location2[1]; step_location1[2] = step_location2[2];
+			j = j + 1;
+			step_end[0] = step_location1[0]; step_end[1] = step_location1[1]; step_end[2] = step_location1[2];
+			continue;
+		}
+		else//diffusion out of molecule
+		{
+			double permeability = rand() / double(RAND_MAX + 1);
+			if (permeability < permeability_probability_in)
+			{
+				int n_step1 = n_step - j;
+				double step_start1[3];
+				step_start1[0] = step_location2[0];
+				step_start1[1] = step_location2[1];
+				step_start1[2] = step_location2[2];
+
+				DiffusionOutMyocyte(n_myocyte, start_point_all, end_point_all, rr, length_step1, length_step2, n_step1, step_start1, step_end, permeability_probability_in, permeability_probability_out);
+				break;
+
+			}
+			else
+			{
+
+
+				double normal_cylinder[3];
+				NormalCylinder(start_point, end_point, step_location2, normal_cylinder);
+
+				double translate_p[3][3];
+				ElaslicityTranslate(normal_cylinder, translate_p);
+				double new_diffusion_dir[3];
+				new_diffusion_dir[0] = diffusion_dir[0] * translate_p[0][0] + diffusion_dir[1] * translate_p[1][0] + diffusion_dir[2] * translate_p[2][0];
+				new_diffusion_dir[1] = diffusion_dir[0] * translate_p[0][1] + diffusion_dir[1] * translate_p[1][1] + diffusion_dir[2] * translate_p[2][1];
+				new_diffusion_dir[2] = diffusion_dir[0] * translate_p[0][2] + diffusion_dir[1] * translate_p[1][2] + diffusion_dir[2] * translate_p[2][2];
+				double returnResult[3];
+				CylinderLineIntersectPoint1(step_location2, normal_cylinder, r, dd, returnResult);
+				double ReflectionLength = sqrt((step_location2[0] - returnResult[0])*(step_location2[0] - returnResult[0]) + (step_location2[1] - returnResult[1])*(step_location2[1] - returnResult[1]) + (step_location2[2] - returnResult[2])*(step_location2[2] - returnResult[2]));
+				step_location1[0] = returnResult[0] + new_diffusion_dir[0] * ReflectionLength;
+				step_location1[1] = returnResult[1] + new_diffusion_dir[1] * ReflectionLength;
+				step_location1[2] = returnResult[2] + new_diffusion_dir[2] * ReflectionLength;
+
+				step_end[0] = step_location1[0]; step_end[1] = step_location1[1]; step_end[2] = step_location1[2];
+				j = j + 1;
+			}
+		}
+	}
+}
+void DiffusionOutMyocyte(int n_myocyte, double start_point_all[7000][3], double end_point_all[7000][3], double rr[7000], double length_step1, double length_step2, int n_step, double step_start[3], double step_end[3], double permeability_probability_in, double permeability_probability_out)
+{
+	double step_location1[] = { step_start[0] ,step_start[1] ,step_start[2] };
+
+	int j = 0;
+	while (j < n_step)
+	{
+
+		double x1 = rand() / double(RAND_MAX + 1) * 2 - 1;
+
+		double x2 = rand() / double(RAND_MAX + 1) * 2 - 1;
+		if (x1*x1 + x2 * x2 >= 1)
+		{
+			continue;
+		}
+
+		double xx = 2 * x1*sqrt(1 - x1 * x1 - x2 * x2);
+		double yy = 2 * x2*sqrt(1 - x1 * x1 - x2 * x2);
+		double zz = 1 - 2 * (x1 * x1 + x2 * x2);
+		double diffusion_dir[] = { xx,yy,zz };
+
+
+
+		double step_location2[] = { step_location1[0] + diffusion_dir[0] * length_step2,step_location1[1] + diffusion_dir[1] * length_step2,step_location1[2] + diffusion_dir[2] * length_step2 };
+
+
+		int k = 0;
+		while (k < n_myocyte)
+		{
+			double start_point[3];
+			start_point[0] = start_point_all[k][0]; start_point[1] = start_point_all[k][1]; start_point[2] = start_point_all[k][2];
+			double end_point[3];
+			end_point[0] = end_point_all[k][0]; end_point[1] = end_point_all[k][1]; end_point[2] = end_point_all[k][2];
+			double r = rr[k];
+			double start_end[3];
+			start_end[0] = end_point[0] - start_point[0]; start_end[1] = end_point[1] - start_point[1]; start_end[2] = end_point[2] - start_point[2];
+			double cylinder_dir[3];
+			cylinder_dir[0] = start_end[0] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+			cylinder_dir[1] = start_end[1] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+			cylinder_dir[2] = start_end[2] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+
+			double vert_a[] = { step_location2[0] - start_point[0],step_location2[1] - start_point[1], step_location2[2] - start_point[2] };
+			double cross_p[3];
+			crossProduct(vert_a, cylinder_dir, cross_p);
+			double d = sqrt(cross_p[0] * cross_p[0] + cross_p[1] * cross_p[1] + cross_p[2] * cross_p[2]);
+
+			if (d <= r) // molecule in myocyte
+			{
+				double permeability = rand() / double(RAND_MAX + 1);
+				if (permeability < permeability_probability_out)
+				{
+					int n_step1 = n_step - j;
+					double step_start1[3];
+					step_start1[0] = step_location2[0]; step_start1[1] = step_location2[1]; step_start1[2] = step_location2[2];
+					DiffusionInMyocyte(n_myocyte, start_point_all, end_point_all, start_point, end_point, rr, r, length_step1, length_step2, n_step1, step_start1, step_end, permeability_probability_in, permeability_probability_out);
+					j = n_step;
+					break;
+				}
+				else
+				{
+
+					double normal_cylinder[3];
+					NormalCylinder(start_point, end_point, step_location2, normal_cylinder);
+
+					double translate_p[3][3];
+					ElaslicityTranslate(normal_cylinder, translate_p);
+					double new_diffusion_dir[3];
+					new_diffusion_dir[0] = diffusion_dir[0] * translate_p[0][0] + diffusion_dir[1] * translate_p[1][0] + diffusion_dir[2] * translate_p[2][0];
+					new_diffusion_dir[1] = diffusion_dir[0] * translate_p[0][1] + diffusion_dir[1] * translate_p[1][1] + diffusion_dir[2] * translate_p[2][1];
+					new_diffusion_dir[2] = diffusion_dir[0] * translate_p[0][2] + diffusion_dir[1] * translate_p[1][2] + diffusion_dir[2] * translate_p[2][2];
+					double returnResult[3];
+					CylinderLineIntersectPoint(step_location2, normal_cylinder, r, returnResult);
+					double ReflectionLength = sqrt((step_location2[0] - returnResult[0])*(step_location2[0] - returnResult[0]) + (step_location2[1] - returnResult[1])*(step_location2[1] - returnResult[1]) + (step_location2[2] - returnResult[2])*(step_location2[2] - returnResult[2]));
+					step_location2[0] = returnResult[0] + new_diffusion_dir[0] * ReflectionLength;
+					step_location2[1] = returnResult[1] + new_diffusion_dir[1] * ReflectionLength;
+					step_location2[2] = returnResult[2] + new_diffusion_dir[2] * ReflectionLength;
+
+
+					double vert_c[3];
+					double cross_ppp[3];
+					vert_c[0] = step_location2[0] - start_point[0]; vert_c[1] = step_location2[1] - start_point[1]; vert_c[2] = step_location2[2] - start_point[2];
+					crossProduct(vert_c, cylinder_dir, cross_ppp);
+					double ddd = sqrt(cross_ppp[0] * cross_ppp[0] + cross_ppp[1] * cross_ppp[1] + cross_ppp[2] * cross_ppp[2]);
+
+					if (ddd <= r)
+					{
+
+						break;
+					}
+					else
+					{
+						step_location1[0] = step_location2[0];
+						step_location1[1] = step_location2[1];
+						step_location1[2] = step_location2[2];
+						j = j + 1;
+						step_end[0] = step_location1[0]; step_end[1] = step_location1[1]; step_end[2] = step_location1[2];
+						break;
+
+					}
+
+				}
+			}
+
+
+			k = k + 1;
+		}
+		if (k == n_myocyte)
+		{
+			step_location1[0] = step_location2[0];
+			step_location1[1] = step_location2[1];
+			step_location1[2] = step_location2[2];
+			j = j + 1;
+			step_end[0] = step_location1[0]; step_end[1] = step_location1[1]; step_end[2] = step_location1[2];
+		}
+
+
+
+
+	}
+
+
+}
+
+int CountLines(char *filename)
+{
+	ifstream ReadFile;
+	int n = 0;
+	string tmp;
+	ReadFile.open(filename, ios::in);//ios::in 
+	if (ReadFile.fail())//
+	{
+		return 0;
+	}
+	else//文件存在
+	{
+		while (getline(ReadFile, tmp, '\n'))
+		{
+			n++;
+		}
+		ReadFile.close();
+		return n;
+	}
+}
+char *join1(char *a, char *b) {
+	char *c = (char *)malloc(strlen(a) + strlen(b) + 1); 
+	if (c == NULL) exit(1);
+	char *tempc = c; //把首地址存下来
+	while (*a != '\0') {
+		*c++ = *a++;
+	}
+	while ((*c++ = *b++) != '\0') {
+		;
+	}
+	
+	return tempc;
+}
+
+const double pi = 3.1415926;
+//molecule diffusion definition
+const double D1 = 1E-3;//diffusion coefficient of myocyte(mm^2/s)
+const double D2 = 2.5E-3;//diffusion coefficient of ECM(mm^2/s)
+const double T = 0.05;//diffusion time(s)
+const int n_step =200;//step number
+
+double Dt = T / n_step;//every step time
+double length_step1 = sqrt(6 * D1*Dt);//every step length(mm),inmyocyte
+double length_step2 = sqrt(6 * D2*Dt);//every step length(mm),outmyocyte
+
+const int n_molecule =300000;
+//double step_start[n_molecule][3];
+//double step_end[n_molecule][3];
+
+//myocyte definition
+double start_point_all[7000][3];
+double end_point_all[7000][3];
+double rr[7000];
+double permeability_probability_in = 0.0163;
+double permeability_probability_out =0.0103;
+
+int main()
+{
+
+	//clock_t start = clock();
+	for (int num1 = 1; num1 <2; num1++)
+	{
+		for (int num2= 1; num2 <2; num2++)
+		{
+			//for (int num3 = 1; num3 < 6; num3++)
+			//{
+
+				char string1[4];
+				char string2[4];
+				//char string3[4];
+				_itoa_s(num1, string1, 10);
+				_itoa_s(num2, string2, 10);
+				//_itoa_s(num3, string3, 10);
+				char string4[2] = "_";
+
+				char string5[82] = "startpoint_mean_r=0.01_std_r=0.002_step=1_DM=70_0.3_0.3_0.7.txt";
+
+				char *a = join1(string1, string4);
+				char *b = join1(a, string2);
+				//char *c = join1(b, string4);
+				//char *d = join1(c, string3);
+				char *e = join1(b,string5);
+				//char c[82] = "startpoint_mean_r=0.01_std_r=0.001_step=1_DM=50_0.7_0.7_0.7.txt";
+				ifstream file;
+				int LINES;
+
+				file.open(string5, ios::in);
+				cout << string5 << '\n';
+				LINES = CountLines(string5);
+
+				double *temp = new double[LINES];
+
+				int i = 0;
+				while (!file.eof()) //读取数据到数组
+				{
+
+					file >> temp[i];
+
+					i++;
+				}
+
+
+				file.close(); //关闭文件
+
+
+					//myocyte definition
+
+				int n_myocyte = temp[0];
+
+
+
+
+				for (int i = 0; i < n_myocyte; i++)
+				{
+					rr[i] = temp[1 + i];
+				}
+
+
+				for (int i = 0; i < n_myocyte; i++)
+				{
+					for (int j = 0; j < 3; j++)
+					{
+						start_point_all[i][j] = temp[1 + n_myocyte + 3 * i + j];
+						end_point_all[i][j] = temp[1 + n_myocyte + 3 * n_myocyte + 3 * i + j];
+					}
+				}
+				delete[]temp;
+
+
+
+
+				char string7[149] = "startpoint_mean_r=0.01_std_r=0.002_step=1_DM=70_0.3_0.3_0.7_per=0.002_molecules=300000_DELTA=0.05_tau=0.25_D=1_2.5_cycle=1.txt";
+				//char string7[94] = "1.txt";
+				char *g = join1(b, string7);
+				//char g[134] = "startpoint_mean_r=0.01_std_r=0.001_step=1_DM=50_0.7_0.7_0.7_per=0.002_molecules=50000_DELTA=0.001_tau=0.001_D=3_3_cycle=10_newnew.txt";
+				ofstream outfile;
+				outfile.open(string7);//outfile.open("1.txt");
+
+				// definition step_start out myocyte
+				srand((unsigned)time(NULL));
+
+				for (int i = 0; i < n_molecule; i++)
+				{
+					double step_start1[3];
+					step_start1[0] = rand() / double(RAND_MAX + 1) *0.1 - 0.05;
+					step_start1[1] = rand() / double(RAND_MAX + 1) *0.1 - 0.05;
+					step_start1[2] = rand() / double(RAND_MAX + 1) *0.5 - 0.25;
+
+					outfile << step_start1[0] << '\n' << step_start1[1] << '\n' << step_start1[2] << '\n';
+					double step_end1[3];
+					for (int k = 0; k <1; k++)
+					{
+
+						int j = 0;
+						while (j < n_myocyte)
+						{
+							double start_point[3];
+							start_point[0] = start_point_all[j][0]; start_point[1] = start_point_all[j][1]; start_point[2] = start_point_all[j][2];
+							double end_point[3];
+							end_point[0] = end_point_all[j][0]; end_point[1] = end_point_all[j][1]; end_point[2] = end_point_all[j][2];
+
+							double r = rr[j];
+							double start_end[3];
+							start_end[0] = end_point[0] - start_point[0]; start_end[1] = end_point[1] - start_point[1]; start_end[2] = end_point[2] - start_point[2];
+							double cylinder_dir[3];
+							cylinder_dir[0] = start_end[0] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+							cylinder_dir[1] = start_end[1] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+							cylinder_dir[2] = start_end[2] / sqrt(start_end[0] * start_end[0] + start_end[1] * start_end[1] + start_end[2] * start_end[2]);
+
+							double vert_a[3];
+							vert_a[0] = step_start1[0] - start_point[0]; vert_a[1] = step_start1[1] - start_point[1]; vert_a[2] = step_start1[2] - start_point[2];
+							double cross_p[3];
+							crossProduct(vert_a, cylinder_dir, cross_p);
+							double d = sqrt(cross_p[0] * cross_p[0] + cross_p[1] * cross_p[1] + cross_p[2] * cross_p[2]);
+
+
+							if (d <= r)//molecule in myocyte
+							{//diffuse in myocyte
+								//step_start[i][0] = step_start1[0];
+								//step_start[i][1] = step_start1[1];
+								//step_start[i][2] = step_start1[2];
+
+
+
+								DiffusionInMyocyte(n_myocyte, start_point_all, end_point_all, start_point, end_point, rr, r, length_step1, length_step2, n_step, step_start1, step_end1, permeability_probability_in, permeability_probability_out);
+								outfile << step_end1[0] << '\n' << step_end1[1] << '\n' << step_end1[2] << '\n';
+
+								step_start1[0] = step_end1[0]; step_start1[1] = step_end1[1]; step_start1[2] = step_end1[2];
+
+								//step_end[i][0] = step_end1[0]; step_end[i][1] = step_end1[1]; step_end[i][2] = step_end1[2];
+
+								break;
+							}
+							j = j + 1;
+
+						}
+						if (j != n_myocyte)
+						{
+							continue;
+						}
+						else
+						{//diffuse out of myocyte
+							//step_start[i][0] = step_start1[0];
+							//step_start[i][1] = step_start1[1];
+							//step_start[i][2] = step_start1[2];
+
+
+
+							DiffusionOutMyocyte(n_myocyte, start_point_all, end_point_all, rr, length_step1, length_step2, n_step, step_start1, step_end1, permeability_probability_in, permeability_probability_out);
+							outfile << step_end1[0] << '\n' << step_end1[1] << '\n' << step_end1[2] << '\n';
+
+							step_start1[0] = step_end1[0]; step_start1[1] = step_end1[1]; step_start1[2] = step_end1[2];
+							//step_end[i][0] = step_end1[0]; step_end[i][1] = step_end1[1]; step_end[i][2] = step_end1[2];
+
+						}
+
+
+					}
+				}
+
+
+				/*char string6[88] = "_r=0.01_dis=7_per=0.01_molecules=25000_DELTA=0.05_tau=0.1_D=1_2.5.txt";
+				char *f = join1(string1, string6);
+				ofstream outfile;
+
+				outfile.open(f);
+				//
+				for (int i = 0; i < n_molecule; i++)
+				{
+
+
+					outfile << step_start[i][0] << '\n' << step_start[i][1] << '\n' << step_start[i][2] << '\n';
+
+				}
+
+				for (int i = 0; i < n_molecule; i++)
+				{
+
+
+					outfile << step_end[i][0] << '\n' << step_end[i][1] << '\n' << step_end[i][2] << '\n';
+
+				}*/
+
+				//clock_t end = clock();
+				//cout << (double)(end - start) / CLOCKS_PER_SEC << "s" << endl;
+
+				outfile.close();
+				//return 0;
+			//}
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
