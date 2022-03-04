@@ -385,7 +385,7 @@ int main()
 				//_itoa_s(num3, string3, 10);
 				char string4[2] = "_";
 
-				char string5[82] = "startpoint_mean_r=0.01_std_r=0.002_step=1_DM=70_0.3_0.3_0.7.txt";
+				char string5[82] = "model.txt";
 
 				char *a = join1(string1, string4);
 				char *b = join1(a, string2);
@@ -441,7 +441,7 @@ int main()
 
 
 
-				char string7[149] = "startpoint_mean_r=0.01_std_r=0.002_step=1_DM=70_0.3_0.3_0.7_per=0.002_molecules=300000_DELTA=0.05_tau=0.25_D=1_2.5_cycle=1.txt";
+				char string7[149] = "model_per=0.002_molecules=300000_DELTA=0.05_tau=0.25_D=1_2.5_cycle=1.txt";
 				//char string7[94] = "1.txt";
 				char *g = join1(b, string7);
 				//char g[134] = "startpoint_mean_r=0.01_std_r=0.001_step=1_DM=50_0.7_0.7_0.7_per=0.002_molecules=50000_DELTA=0.001_tau=0.001_D=3_3_cycle=10_newnew.txt";
@@ -456,7 +456,7 @@ int main()
 					double step_start1[3];
 					step_start1[0] = rand() / double(RAND_MAX + 1) *0.1 - 0.05;
 					step_start1[1] = rand() / double(RAND_MAX + 1) *0.1 - 0.05;
-					step_start1[2] = rand() / double(RAND_MAX + 1) *0.5 - 0.25;
+					step_start1[2] = rand() / double(RAND_MAX + 1) *0.1- 0.05;
 
 					outfile << step_start1[0] << '\n' << step_start1[1] << '\n' << step_start1[2] << '\n';
 					double step_end1[3];
